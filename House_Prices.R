@@ -13,18 +13,9 @@ library(VIM)
 house_train <- read.csv('train.csv')
 house_test <- read.csv('test.csv')
 
-# Set the ID variable and Target Variable
-ID.VAR <- "Id"
-TARGET.VAR <- "SalePrice"
-
-# Grab categorical variables
-#cat_vars_train <- names(house_train)[which(sapply(house_train, is.character))]
-
-# Grab numeric variables
-#num_vars_train <- names(house_train)[which(sapply(house_train, is.numeric))]
-
 # ---
 
+# Change factors to integers
 for(i in 1:81){
   if(is.factor(house_train[, i])){
     house_train[, i] <- as.integer(house_train[, i])
