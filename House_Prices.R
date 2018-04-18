@@ -22,7 +22,7 @@ for(i in 1:81){
   }
 }
 
-# -----------------------------------------------------------------------------
+# ---
 
 # Dealing with missing values
 
@@ -51,8 +51,6 @@ completed_data <- complete(incomplete_mice, 1)
 training <- setdiff(names(completed_data), c(ID.VAR,TARGET.VAR))
 response <- completed_data$SalePrice
 training <- completed_data[training]
-
-# training - updated data table
 
 # Run Boruta algorithm and store it, set seed 567
 set.seed(567)
