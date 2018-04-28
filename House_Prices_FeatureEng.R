@@ -98,9 +98,8 @@ kitchen_names <- names(combined_df[, like(names(combined_df), "Kitchen"), with =
 combined_df[is.na(KitchenQual), kitchen_names, with = FALSE]
 
 # How many NA's do we have remaining?
-count_na <- sapply(combined_df, function(x) length(which(is.na(x) == TRUE)))
-na_df <- data.frame(Count = count_na)
-na_df
+na_vars <- which(colSums(is.na(combined_df)) > 0)
+sort(colSums(sapply(combined_df[, ..na_vars], is.na)), decreasing = TRUE)
 
 # Only 1 NA value in KitchenQual
 frq_kitchen <- names(which.max(table(combined_df[, "KitchenQual"])))
@@ -187,7 +186,55 @@ combined_df[is.na(MasVnrType) | is.na(MasVnrArea), c("Id", "MasVnrType", "MasVnr
 # If both Type and Area have NA then the house likely doesn't have Masonry Veneer so we can set
 # the NA's to their "none" values None and 0 respectively
 with(combined_df, table(MasVnrType))
-combined_df[is.na(MasVnrType), "MasVnrType" := "None"]
-combined_df[is.na(MasVnrArea), "MasVnrArea" := 0]
+combined_df[is.na(MasVnrType) & is.na(MasVnrArea), c("MasVnrType", "MasVnrArea") := list("None", 0)]
+combined_df[, list(Median = median(MasVnrArea)), by = "MasVnrType"]
+ggplot(combined_df) + geom_point(aes(x = MasVnrArea, y = MasVnrType))
+combined_df[2611, "MasVnrType" := "BrkFace"]
+
+# How many NA's do we have remaining?
+na_vars <- which(colSums(is.na(combined_df)) > 0)
+sort(colSums(sapply(combined_df[, ..na_vars], is.na)), decreasing = TRUE)
+
+# LotFrontage - Linear Feet of Street connected to property
+sort(table(combined_df$LotFrontage), decreasing = TRUE)[1:10]
+lot_per_neighborhood <- combined_df[, list(Median = median(LotFrontage, na.rm = TRUE)), by = "Neighborhood"]
+lot_per_neighborhood <- lot_per_neighborhood[order(Neighborhood)]
+# Replace with medians
+na_LotFrontage <- which(is.na(combined_df$LotFrontage))
+
+for (i in na_LotFrontage){
+  median_lot <- lot_per_neighborhood[Neighborhood == combined_df[i, Neighborhood], "Median"]
+  combined_df[i, "LotFrontage"] <- median_lot[[1]]
+}
+
+# Fence - Fence Quality
+ggplot(combined_df) + geom_bar(aes(x = fct_infreq(Fence)))
+# I am going to assume that if Fence is NA, then there is no fence on the property
+combined_df[is.na(Fence), "Fence" := "None"]
+# I am going to assume the same for MiscFeature
+combined_df[is.na(MiscFeature), "MiscFeature" := "None"]
+ggplot(combined_df) + geom_bar(aes(x = fct_infreq(MiscFeature)))
+
+# How many NA's do we have remaining?
+na_vars <- which(colSums(is.na(combined_df)) > 0)
+sort(colSums(sapply(combined_df[, ..na_vars], is.na)), decreasing = TRUE)
+
+# Fireplace Quality
+ggplot(combined_df) + geom_bar(aes(x = fct_infreq(FireplaceQu)))
+# First check if there are any NA values in Quality for homes that have at least 1 fireplace
+combined_df[is.na(FireplaceQu) & Fireplaces > 0, c("Fireplaces", "FireplaceQu")]
+# There are no houses that recorded a fireplace and did not record a quality so we can
+# replace the NA's in Quality with None since they don't have a fireplace
+combined_df[is.na(FireplaceQu), "FireplaceQu" := "None"]
+
+# Alley is the last NA variable
+ggplot(combined_df) + geom_bar(aes(x = fct_infreq(Alley)))
+# For simplicity we are just going to assume that those with NA do not have alley access
+combined_df[is.na(Alley), "Alley" := "None"]
+
+# ----------------------------------------------------
+# --------------End Imputing Missing Values-----------
+# ----------------------------------------------------
+
 
 
