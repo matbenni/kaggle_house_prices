@@ -137,4 +137,57 @@ for (b in basement_num_vars) {
 for (c in basement_cat_vars) {
   set(combined_df, i = which(is.na(combined_df[[c]])), j = c, value = "None")
 }
-summary(combined_df[, basement_names, with = FALSE])
+# Basement Done
+
+# Exterior1st and Exterior2nd
+exterior_missing <- which(is.na(combined_df$Exterior1st) | is.na(combined_df$Exterior2nd))
+# Only one observation missing for exteriors - fill in with most common value
+combined_df[exterior_missing, c("Exterior1st", "Exterior2nd") := "Other"]
+
+# SaleType, Functional, and Utilities all have fewer than 3 missing values so we will deal with those next
+table(combined_df$SaleType)
+sum(is.na(combined_df$SaleType))
+# There is only one missing value in SaleType
+ggplot(combined_df) + geom_bar(aes(x = fct_infreq(SaleType)))
+# Check which SaleCondition the NA in SaleType has
+combined_df[is.na(SaleType), "SaleCondition"]
+# Now check which values of SaleType most resemble the SaleCondition of Normal
+table(combined_df$SaleType, combined_df$SaleCondition)
+# Replace the NA with WD
+combined_df[is.na(SaleType), "SaleType" := "WD"]
+
+# Functional
+table(combined_df$Functional)
+sum(is.na(combined_df$Functional))
+ggplot(combined_df) + geom_bar(aes(x = fct_infreq(Functional)))
+combined_df[is.na(Functional), "Functional" := "Typ"]
+
+# Utilities
+table(combined_df$Utilities)
+sum(is.na(combined_df$Utilities))
+ggplot(combined_df) + geom_bar(aes(x = fct_infreq(Utilities)))
+# Since there is only one house with NoSeWa and the rest have AllPub, we can actually
+# drop this entire feature from our dataset
+combined_df[, "Utilities" := NULL]
+
+# MS Variables - MSZoning and MSSubClass
+sum(is.na(combined_df$MSZoning))
+# 4 missing values from MSZoning
+combined_df[is.na(MSZoning), c("MSZoning", "MSSubClass")]
+ggplot(combined_df) + geom_bar(aes(x = fct_infreq(MSZoning)))
+with(combined_df, table(MSZoning, MSSubClass))
+# For subclass 20, "RL".  For subclass 30, "RM".  For subclass 70, "RM"
+combined_df[MSSubClass == 20, MSZoning := "RL"]
+combined_df[MSSubClass == 30, MSZoning := "RM"]
+combined_df[MSSubClass == 70, MSZoning := "RM"]
+
+# Mas Variables - Masonry Veneer - MasVnrType, MasVnrArea
+c(sum(is.na(combined_df$MasVnrType)), sum(is.na(combined_df$MasVnrArea)))
+combined_df[is.na(MasVnrType) | is.na(MasVnrArea), c("Id", "MasVnrType", "MasVnrArea")]
+# If both Type and Area have NA then the house likely doesn't have Masonry Veneer so we can set
+# the NA's to their "none" values None and 0 respectively
+with(combined_df, table(MasVnrType))
+combined_df[is.na(MasVnrType), "MasVnrType" := "None"]
+combined_df[is.na(MasVnrArea), "MasVnrArea" := 0]
+
+
